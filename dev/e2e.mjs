@@ -311,6 +311,28 @@ async function main() {
     await waitFor(async () => (await textOf(page, '#stat-count')) === '3', 'shared data for second user');
     check('second user sees the shared ledger', true);
 
+    /* ---- domain inquiry page ---- */
+    console.log('\n· Domain inquiry');
+    const anon = await browser.newContext();
+    const anonPage = await anon.newPage();
+    await anonPage.goto(BASE);
+    await anonPage.waitForSelector('#login-view:not([hidden])');
+    check('login footnote present', (await anonPage.textContent('.login-footnote')).includes('Interested in buying this domain'));
+    await Promise.all([anonPage.waitForNavigation(), anonPage.click('.login-footnote a')]);
+    check('footnote links to inquiry page', anonPage.url().endsWith('/domain-inquiry.html'));
+    check('form is a Netlify form', await anonPage.$eval('form[name=domain-inquiry]', (f) => f.hasAttribute('data-netlify')));
+    check('email field is required', await anonPage.$eval('form[name=domain-inquiry] [name=email]', (el) => el.required && el.type === 'email'));
+    check('phone field is optional', await anonPage.$eval('form[name=domain-inquiry] [name=phone]', (el) => !el.required));
+    check('name + message fields present',
+      !!(await anonPage.$('form[name=domain-inquiry] input[name=name]')) &&
+      !!(await anonPage.$('form[name=domain-inquiry] textarea[name=message]')));
+    check('hidden form-name input present', await anonPage.$eval('input[name=form-name]', (el) => el.value === 'domain-inquiry'));
+    check('honeypot field hidden off-screen', await anonPage.$eval('.honeypot', (el) => getComputedStyle(el).position === 'absolute'));
+    await anonPage.screenshot({ path: path.join(SHOT_DIR, '09-domain-inquiry.png') });
+    const thanksResp = await anonPage.goto(`${BASE}/domain-inquiry-thanks.html`);
+    check('thanks page exists', thanksResp.status() === 200 && (await anonPage.textContent('body')).includes('Inquiry sent'));
+    await anon.close();
+
     /* ---- mobile layout ---- */
     console.log('\n· Mobile layout');
     const mobile = await context.newPage();
