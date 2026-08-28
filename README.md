@@ -19,6 +19,7 @@ whether health insurance makes sense next year.
 | Variable | Purpose |
 |---|---|
 | `APP_USERS` | JSON array of accounts: `[{"username":"lance","displayName":"Lance","passwordHash":"$2a$12$…"}, …]` |
+| `APP_USERS_B64` | Alternative to `APP_USERS`: the same JSON, base64-encoded (`APP_USERS` wins if both are set) |
 | `JWT_SECRET` | Long random string used to sign session cookies |
 
 To change a password (or add an account), generate a hash and update `APP_USERS`

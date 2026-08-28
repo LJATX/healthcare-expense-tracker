@@ -14,8 +14,11 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
+// Accounts come from APP_USERS (JSON array) or APP_USERS_B64 (the same JSON,
+// base64-encoded — handy where tooling mangles quotes/$ in env var values).
 export function loadUsers() {
-  const raw = process.env.APP_USERS;
+  const raw = process.env.APP_USERS
+    || (process.env.APP_USERS_B64 && Buffer.from(process.env.APP_USERS_B64, 'base64').toString('utf8'));
   if (!raw) throw new Error('APP_USERS is not configured');
   const users = JSON.parse(raw);
   if (!Array.isArray(users)) throw new Error('APP_USERS must be a JSON array');
