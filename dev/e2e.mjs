@@ -88,6 +88,16 @@ async function main() {
     { username: 'lance', displayName: 'Lance', passwordHash: bcrypt.hashSync(PASS_1, 10) },
     { username: 'jess', displayName: 'Jess', passwordHash: bcrypt.hashSync(PASS_2, 10) },
   ];
+  const mockDate = iso(new Date(today.getFullYear(), 3, 3));
+  const RECEIPT_MOCK = {
+    date: mockDate,
+    amount: 342.75,
+    description: 'MRI scan — Radiology Associates',
+    providerType: 'Imaging Center',
+    providerTypeIsNew: true,
+    person: 'Jess',
+    note: 'Amount is the full billed total',
+  };
   const server = spawn('node', [path.join(__dirname, 'server.js')], {
     env: {
       ...process.env,
@@ -96,6 +106,7 @@ async function main() {
       LOCAL_DEV: '1',
       JWT_SECRET: 'e2e-secret',
       APP_USERS: JSON.stringify(users),
+      RECEIPT_MOCK_JSON: JSON.stringify(RECEIPT_MOCK),
     },
     stdio: 'inherit',
   });
@@ -243,6 +254,47 @@ async function main() {
     await waitFor(async () => (await page.$$('#expense-tbody tr')).length === 2, '2 rows after delete');
     check('delete removes the row (after confirm)', true);
 
+    /* ---- receipt scan (mocked extraction) ---- */
+    console.log('\n· Receipt scan');
+    const pngPath = path.join(SHOT_DIR, 'fake-receipt.png');
+    await fs.writeFile(pngPath, Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'));
+
+    // Edit mode should NOT offer the scanner
+    const anyRow = (await page.$$('#expense-tbody tr'))[0];
+    await anyRow.hover();
+    await (await anyRow.$('[data-edit]')).click();
+    await page.waitForSelector('.slideover.is-open');
+    check('scan button hidden when editing', await page.$eval('#scan-block', (el) => el.hidden));
+    await page.click('#slideover-close');
+    await waitFor(() => page.$('.slideover[hidden]'), 'slideover closed');
+
+    // Add mode: scan fills the form
+    await page.click('#page-expenses:not([hidden]) [data-action=add]');
+    await page.waitForSelector('.slideover.is-open');
+    check('scan button visible when adding', await page.$eval('#scan-block', (el) => !el.hidden));
+    await page.setInputFiles('#receipt-input', pngPath);
+    await page.waitForSelector('#scan-note:not([hidden])');
+    const noteText = await textOf(page, '#scan-note');
+    check('scan summary lists filled fields', noteText.includes('Filled from your receipt'));
+    check('scan summary shows extraction note', noteText.includes('full billed total'));
+    check('scan fills date', (await page.inputValue('#expense-form [name=date]')) === mockDate);
+    check('scan fills amount', (await page.inputValue('#expense-form [name=amount]')) === '342.75');
+    check('scan fills description', (await page.inputValue('#expense-form [name=description]')) === RECEIPT_MOCK.description);
+    check('scan matches person Jess', (await page.inputValue('#expense-form [name=person]')) === 'Jess');
+    check('scan highlights filled fields', (await page.$$('#expense-form .ai-filled')).length >= 3);
+    check('new provider type suggested via add flow',
+      !(await page.$eval('#type-add', (el) => el.hidden)) &&
+      (await page.inputValue('#type-add-input')) === 'Imaging Center');
+    await page.screenshot({ path: path.join(SHOT_DIR, '08-receipt-filled.png') });
+    await page.click('#type-add-save');
+    await waitFor(async () => (await page.inputValue('#expense-form [name=providerType]')) === 'Imaging Center', 'new type selected');
+    check('confirming suggestion selects the new type', true);
+    await page.click('#form-save');
+    await waitFor(() => page.$('.slideover[hidden]'), 'slideover closed after scan save');
+    await waitFor(async () => (await page.textContent('#expense-tbody')).includes('MRI scan'), 'scanned expense in table');
+    check('scanned expense saved to ledger', (await page.textContent('#expense-tbody')).includes(money(342.75)));
+
     /* ---- second user sees shared data ---- */
     console.log('\n· Second account');
     await page.click('#logout-btn');
@@ -256,7 +308,7 @@ async function main() {
     await page.click('#login-btn');
     await page.waitForSelector('#app-view:not([hidden])');
     check('second user logs in', (await textOf(page, '#user-chip')) === 'Jess');
-    await waitFor(async () => (await textOf(page, '#stat-count')) === '2', 'shared data for second user');
+    await waitFor(async () => (await textOf(page, '#stat-count')) === '3', 'shared data for second user');
     check('second user sees the shared ledger', true);
 
     /* ---- mobile layout ---- */
