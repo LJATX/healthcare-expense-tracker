@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interested in this domain?</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M7 17h4l2.5-6 4 10 2.5-5.5H25' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="login-view">
+    <div class="login-card">
+      <div class="brand brand-lg">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M7 17h4l2.5-6 4 10 2.5-5.5H25" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">Interested in this domain?</span>
+      </div>
+      <p class="login-sub">Send a note about this domain and the owner will get back to you.</p>
+      <form name="domain-inquiry" method="POST" action="/domain-inquiry-thanks.html" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="domain-inquiry" />
+        <p class="honeypot" aria-hidden="true">
+          <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+        </p>
+        <label class="field">
+          <span class="field-label">Your name</span>
+          <input type="text" name="name" autocomplete="name" maxlength="100" />
+        </label>
+        <label class="field">
+          <span class="field-label">Email address</span>
+          <input type="email" name="email" autocomplete="email" maxlength="200" required />
+        </label>
+        <label class="field">
+          <span class="field-label">Phone number <em class="optional">optional</em></span>
+          <input type="tel" name="phone" autocomplete="tel" maxlength="40" />
+        </label>
+        <label class="field">
+          <span class="field-label">Message</span>
+          <textarea name="message" rows="5" maxlength="2000" placeholder="What would you like to ask or offer?"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Send inquiry</button>
+      </form>
+      <p class="login-foot" style="margin-top:18px"><a class="quiet-link" href="/">← Back</a></p>
+    </div>
+  </div>
+</body>
+</html>
