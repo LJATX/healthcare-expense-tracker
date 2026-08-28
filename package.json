@@ -1,0 +1,19 @@
+{
+  "name": "healthcare-expense-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Family healthcare expense tracker — static frontend + Netlify Functions + Netlify Blobs",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev/server.js",
+    "e2e": "node dev/e2e.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
