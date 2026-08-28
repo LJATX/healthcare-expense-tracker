@@ -5,6 +5,21 @@ dental, vision, pharmacy, …) per family member, with a dashboard that totals
 spending by person, provider type, and month — so at year-end you can judge
 whether health insurance makes sense next year.
 
+![CareLedger dashboard](docs/screenshots/dashboard.png)
+
+## Screenshots
+
+*All screenshots show fictional demo data (regenerate them anytime with
+`node dev/screenshots.mjs`).*
+
+| Expenses table | Add expense |
+|---|---|
+| ![Filterable expenses table with CSV export](docs/screenshots/expenses.png) | ![Add-expense slide-over with receipt scanning](docs/screenshots/add-expense.png) |
+
+| Login | Mobile |
+|---|---|
+| ![Login screen](docs/screenshots/login.png) | <img src="docs/screenshots/mobile-dashboard.png" alt="Mobile dashboard" width="390"> |
+
 ## Stack
 
 - **Frontend** — static single-page app (`public/`), vanilla JS, no build step.
