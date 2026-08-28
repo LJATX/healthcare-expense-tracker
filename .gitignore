@@ -1,0 +1,7 @@
+node_modules/
+.netlify/
+.env
+dev/.data/
+dev/.data-e2e/
+dev/.env-test
+dev/screenshots/

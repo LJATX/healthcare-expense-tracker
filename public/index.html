@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareLedger — Family healthcare expenses</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M7 17h4l2.5-6 4 10 2.5-5.5H25' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="login-view" class="login-view" hidden>
+    <div class="login-card">
+      <div class="brand brand-lg">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M7 17h4l2.5-6 4 10 2.5-5.5H25" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">CareLedger</span>
+      </div>
+      <p class="login-sub">Your family's healthcare spending, in one place.</p>
+      <form id="login-form" novalidate>
+        <label class="field">
+          <span class="field-label">Username</span>
+          <input type="text" name="username" autocomplete="username" autocapitalize="none" required />
+        </label>
+        <label class="field">
+          <span class="field-label">Password</span>
+          <input type="password" name="password" autocomplete="current-password" required />
+        </label>
+        <p id="login-error" class="form-error" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">Sign in</button>
+      </form>
+    </div>
+    <p class="login-foot">Private family app · invite only</p>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M7 17h4l2.5-6 4 10 2.5-5.5H25" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">CareLedger</span>
+      </div>
+      <nav class="tabs" aria-label="Main">
+        <button class="tab is-active" data-page="dashboard">Dashboard</button>
+        <button class="tab" data-page="expenses">Expenses</button>
+      </nav>
+      <div class="topbar-right">
+        <span id="user-chip" class="user-chip"></span>
+        <button id="logout-btn" class="btn btn-ghost btn-sm">Sign out</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- ===== Dashboard ===== -->
+      <section id="page-dashboard" class="page">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-sub" id="dash-sub"></p>
+          </div>
+          <div class="page-actions">
+            <label class="select-wrap" aria-label="Year">
+              <select id="year-select"></select>
+            </label>
+            <button class="btn btn-primary" data-action="add">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Add expense
+            </button>
+          </div>
+        </div>
+
+        <div id="stat-grid" class="stat-grid">
+          <div class="card stat-tile">
+            <span class="stat-label" id="stat-ytd-label">Spent this year</span>
+            <span class="stat-value stat-hero" id="stat-ytd">–</span>
+            <span class="stat-foot" id="stat-ytd-foot"></span>
+          </div>
+          <div class="card stat-tile">
+            <span class="stat-label">Last 30 days</span>
+            <span class="stat-value" id="stat-30d">–</span>
+            <span class="stat-foot" id="stat-30d-foot"></span>
+          </div>
+          <div class="card stat-tile">
+            <span class="stat-label">Entries this year</span>
+            <span class="stat-value" id="stat-count">–</span>
+            <span class="stat-foot" id="stat-count-foot"></span>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="card span-2">
+            <div class="card-head">
+              <h2 class="card-title">Monthly spending</h2>
+              <span class="card-hint" id="chart-hint"></span>
+            </div>
+            <div id="monthly-chart" class="chart-wrap" aria-label="Monthly spending bar chart" role="img"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">By person</h2></div>
+            <div id="by-person" class="breakdown"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">By provider type</h2></div>
+            <div id="by-type" class="breakdown"></div>
+          </div>
+          <div class="card span-2">
+            <div class="card-head">
+              <h2 class="card-title">Recent entries</h2>
+              <button class="btn btn-ghost btn-sm" data-page-link="expenses">View all</button>
+            </div>
+            <div id="recent-list" class="recent-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Expenses ===== -->
+      <section id="page-expenses" class="page" hidden>
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Expenses</h1>
+            <p class="page-sub" id="expenses-sub"></p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" id="export-btn">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0 3-3M8 10 5 7M3 13h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-primary" data-action="add">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Add expense
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <label class="select-wrap"><select id="filter-year"></select></label>
+          <label class="select-wrap"><select id="filter-person"></select></label>
+          <label class="select-wrap"><select id="filter-type"></select></label>
+          <button class="btn btn-ghost btn-sm" id="clear-filters" hidden>Clear filters</button>
+          <span class="filter-total" id="filter-total"></span>
+        </div>
+
+        <div class="card table-card">
+          <table class="expense-table" id="expense-table">
+            <thead>
+              <tr>
+                <th>Date</th><th>Person</th><th>Provider type</th><th>Description</th>
+                <th class="col-amount">Amount</th><th class="col-actions"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="expense-tbody"></tbody>
+          </table>
+          <div id="table-empty" class="empty-state" hidden>
+            <div class="empty-art" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><rect x="8" y="6" width="32" height="38" rx="4" fill="var(--accent-soft)"/><path d="M16 18h16M16 25h16M16 32h9" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </div>
+            <p class="empty-title">No expenses here yet</p>
+            <p class="empty-sub">Log a doctor's visit, a prescription, or a dental cleaning — it takes ten seconds.</p>
+            <button class="btn btn-primary" data-action="add">Add your first expense</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <button class="fab" data-action="add" aria-label="Add expense">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- ============ SLIDE-OVER FORM ============ -->
+  <div id="overlay" class="overlay" hidden></div>
+  <aside id="slideover" class="slideover" hidden aria-label="Expense form">
+    <div class="slideover-head">
+      <h2 id="slideover-title" class="slideover-title">Add expense</h2>
+      <button class="icon-btn" id="slideover-close" aria-label="Close">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <form id="expense-form" class="slideover-body" novalidate>
+      <input type="hidden" name="id" />
+      <label class="field">
+        <span class="field-label">Date</span>
+        <input type="date" name="date" required />
+      </label>
+      <div class="field">
+        <span class="field-label" id="person-label">Person</span>
+        <div class="select-wrap select-block"><select name="person" aria-labelledby="person-label"></select></div>
+        <div class="inline-add" id="person-add" hidden>
+          <input type="text" id="person-add-input" placeholder="e.g. Sam" maxlength="40" />
+          <button type="button" class="btn btn-secondary btn-sm" id="person-add-save">Add</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="person-add-cancel">Cancel</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-label" id="type-label">Provider type</span>
+        <div class="select-wrap select-block"><select name="providerType" aria-labelledby="type-label"></select></div>
+        <div class="inline-add" id="type-add" hidden>
+          <input type="text" id="type-add-input" placeholder="e.g. Chiropractor" maxlength="40" />
+          <button type="button" class="btn btn-secondary btn-sm" id="type-add-save">Add</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="type-add-cancel">Cancel</button>
+        </div>
+      </div>
+      <label class="field">
+        <span class="field-label">Description</span>
+        <input type="text" name="description" placeholder="e.g. Annual physical — Dr. Patel" maxlength="200" required />
+      </label>
+      <label class="field">
+        <span class="field-label">Amount paid</span>
+        <div class="amount-wrap">
+          <span class="amount-prefix">$</span>
+          <input type="number" name="amount" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00" required />
+        </div>
+      </label>
+      <label class="field">
+        <span class="field-label">Notes <em class="optional">optional</em></span>
+        <textarea name="notes" rows="3" maxlength="1000" placeholder="Anything worth remembering"></textarea>
+      </label>
+      <p id="form-error" class="form-error" hidden></p>
+      <div class="slideover-actions">
+        <button type="button" class="btn btn-ghost" id="form-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="form-save">Save expense</button>
+      </div>
+    </form>
+  </aside>
+
+  <div id="chart-tooltip" class="chart-tooltip" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
