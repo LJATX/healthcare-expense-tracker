@@ -9,9 +9,11 @@
     "e2e": "node dev/e2e.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
     "@netlify/blobs": "^8.1.0",
     "bcryptjs": "^2.4.3",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "playwright-core": "^1.49.0"

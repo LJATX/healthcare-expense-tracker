@@ -454,6 +454,7 @@
     $('#form-error').hidden = true;
     $('#person-add').hidden = true;
     $('#type-add').hidden = true;
+    resetScanUI(expense !== null);
 
     form.elements.date.value = expense ? expense.date : todayISO();
     fillSelect(form.elements.person, state.persons, expense?.person ?? state.user.displayName, 'Add someone…');
@@ -562,6 +563,136 @@
     } finally {
       saveBtn.disabled = false;
     }
+  }
+
+  /* ---------------- Receipt scan ---------------- */
+  function resetScanUI(isEditing) {
+    $('#scan-block').hidden = isEditing;
+    $('#receipt-input').value = '';
+    const note = $('#scan-note');
+    note.hidden = true;
+    note.classList.remove('is-error');
+    setScanBusy(false);
+    for (const el of form.querySelectorAll('.ai-filled')) el.classList.remove('ai-filled');
+  }
+
+  function setScanBusy(busy) {
+    $('#scan-btn').classList.toggle('is-busy', busy);
+    $('#scan-btn-label').textContent = busy ? 'Reading your receipt…' : 'Take photo of receipt';
+  }
+
+  function scanNote(html, isError = false) {
+    const note = $('#scan-note');
+    note.innerHTML = html;
+    note.classList.toggle('is-error', isError);
+    note.hidden = false;
+  }
+
+  function markFilled(el) {
+    el.classList.add('ai-filled');
+    el.addEventListener('input', () => el.classList.remove('ai-filled'), { once: true });
+    el.addEventListener('change', () => el.classList.remove('ai-filled'), { once: true });
+  }
+
+  // Downscale/re-encode the photo so uploads stay small and format-safe.
+  function prepareImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxSide = 1600;
+          const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve({ imageBase64: dataUrl.split(',')[1], mediaType: 'image/jpeg' });
+        } catch (err) {
+          reject(err);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image')); };
+      img.src = url;
+    });
+  }
+
+  async function handleReceiptPhoto(file) {
+    if (!file) return;
+    setScanBusy(true);
+    $('#scan-note').hidden = true;
+    try {
+      const payload = await prepareImage(file);
+      const { extraction } = await api('/api/receipt', { method: 'POST', body: payload });
+      await applyExtraction(extraction);
+    } catch (err) {
+      scanNote(esc(err.message || 'Could not read the receipt — enter the details manually.'), true);
+    } finally {
+      setScanBusy(false);
+      $('#receipt-input').value = '';
+    }
+  }
+
+  async function applyExtraction(extraction) {
+    const filled = [];
+
+    if (extraction.date) {
+      form.elements.date.value = extraction.date;
+      markFilled(form.elements.date);
+      filled.push('date');
+    }
+    if (extraction.amount != null) {
+      form.elements.amount.value = extraction.amount;
+      markFilled(form.elements.amount);
+      filled.push('amount');
+    }
+    if (extraction.description) {
+      form.elements.description.value = extraction.description;
+      markFilled(form.elements.description);
+      filled.push('description');
+    }
+    if (extraction.person) {
+      const match = state.persons.find((p) => p.toLowerCase() === extraction.person.toLowerCase());
+      if (match) {
+        form.elements.person.value = match;
+        markFilled(form.elements.person);
+        filled.push('person');
+      }
+    }
+
+    let newTypeSuggested = null;
+    if (extraction.providerType) {
+      const match = state.providerTypes.find((t) => t.toLowerCase() === extraction.providerType.toLowerCase());
+      if (match) {
+        form.elements.providerType.value = match;
+        markFilled(form.elements.providerType);
+        filled.push('provider type');
+      } else {
+        // Suggest it through the add-your-own flow so the user confirms new types.
+        newTypeSuggested = extraction.providerType;
+        form.elements.providerType.value = '__add';
+        $('#type-add').hidden = false;
+        $('#type-add-input').value = newTypeSuggested;
+        markFilled($('#type-add-input'));
+      }
+    }
+
+    if (filled.length === 0 && !newTypeSuggested) {
+      scanNote("Couldn't read any details from that photo — try a closer, well-lit shot or enter it manually.", true);
+      return;
+    }
+
+    let html = `<strong>Filled from your receipt:</strong> ${filled.map(esc).join(', ')}. Double-check everything, fix anything that's off, then save.`;
+    if (newTypeSuggested) {
+      html += `<br><strong>New provider type suggested:</strong> “${esc(newTypeSuggested)}” — press Add to keep it, or pick an existing type.`;
+    }
+    if (extraction.note) {
+      html += `<br>${esc(extraction.note)}`;
+    }
+    scanNote(html);
   }
 
   /* ---------------- Delete (two-tap confirm) ---------------- */
@@ -686,6 +817,9 @@
     });
     inlineAdd('person');
     inlineAdd('type');
+
+    $('#scan-btn').addEventListener('click', () => $('#receipt-input').click());
+    $('#receipt-input').addEventListener('change', (ev) => handleReceiptPhoto(ev.target.files[0]));
 
     let resizeTimer;
     window.addEventListener('resize', () => {

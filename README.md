@@ -13,6 +13,12 @@ whether health insurance makes sense next year.
   user-added persons/provider types in the `settings` store.
 - **Auth** — username/password (bcrypt hashes in the `APP_USERS` env var), JWT
   session in an httpOnly cookie. No public signup — only the configured accounts.
+- **Receipt scanning** — the Add Expense form has a "Take photo of receipt"
+  button (opens the camera on phones). The photo goes to `/api/receipt`, which
+  uses the Claude API (structured outputs) to extract the date of service, the
+  TOTAL cost of care (full billed amount, not the after-insurance figure),
+  a description, the provider type, and the family member — then pre-fills the
+  form with the filled fields highlighted for review before saving.
 
 ## Configuration (Netlify environment variables)
 
@@ -21,6 +27,8 @@ whether health insurance makes sense next year.
 | `APP_USERS` | JSON array of accounts: `[{"username":"lance","displayName":"Lance","passwordHash":"$2a$12$…"}, …]` |
 | `APP_USERS_B64` | Alternative to `APP_USERS`: the same JSON, base64-encoded (`APP_USERS` wins if both are set) |
 | `JWT_SECRET` | Long random string used to sign session cookies |
+| `ANTHROPIC_API_KEY` | Enables the "Take photo of receipt" scanner (create one at console.anthropic.com). Without it the rest of the app works; the scan button explains it isn't set up. |
+| `RECEIPT_MODEL` | Optional — Claude model for receipt extraction (default `claude-opus-5`) |
 
 To change a password (or add an account), generate a hash and update `APP_USERS`
 in the Netlify dashboard (Site configuration → Environment variables), then
