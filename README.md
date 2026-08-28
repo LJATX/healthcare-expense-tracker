@@ -1,11 +1,11 @@
-# CareLedger — family healthcare expense tracker
+# Healthcare Expense
 
 A private web app for logging every healthcare expense through the year (doctor,
 dental, vision, pharmacy, …) per family member, with a dashboard that totals
 spending by person, provider type, and month — so at year-end you can judge
 whether health insurance makes sense next year.
 
-![CareLedger dashboard](docs/screenshots/dashboard.png)
+![Healthcare Expense dashboard](docs/screenshots/dashboard.png)
 
 ## Screenshots
 

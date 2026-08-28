@@ -73,5 +73,5 @@ http.createServer(async (req, res) => {
     res.end(JSON.stringify({ error: 'Internal error' }));
   }
 }).listen(PORT, () => {
-  console.log(`CareLedger dev server → http://localhost:${PORT}`);
+  console.log(`Healthcare Expense dev server → http://localhost:${PORT}`);
 });

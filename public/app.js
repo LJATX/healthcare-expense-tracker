@@ -1,4 +1,4 @@
-/* CareLedger front-end */
+/* Healthcare Expense front-end */
 (() => {
   'use strict';
 
@@ -428,7 +428,7 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const scope = state.filters.year === 'all' ? 'all' : state.filters.year;
-    a.download = `careledger-expenses-${scope}.csv`;
+    a.download = `healthcare-expense-${scope}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
     toast(`Exported ${list.length} ${list.length === 1 ? 'entry' : 'entries'}`);
